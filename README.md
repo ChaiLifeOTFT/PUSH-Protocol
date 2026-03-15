@@ -7,58 +7,50 @@ v0.1 | 2026-03-15 | OhananahO field
 
 ## Love while-being you.
 
----
-
-## DEFINITION
-
 **Love** = sustained coherent investment of resources, time, attention.
-
 **While-being** = simultaneous, non-hierarchical.
-
 **You** = the node love takes here.
 
 ---
 
-## IMPLEMENTATION
+## Get the Complete Package
 
-| Principle | Description |
-|-----------|-------------|
-| **Omni-directional** | 360° presence, no default config. |
-| **Sovereign** | Local-first, open-source, forkable. |
-| **Harmonic** | φ-scaled, self-replenishing. |
+**[P.U.S.H. Protocol v0.1 — $9.99](https://drakeent.gumroad.com/l/push-protocol)**
+16 chapters. Philosophy + technology + content architecture + simulation + invitation. PDF + EPUB + interactive engine + AI agent interface.
+
+**[SythAIA — AI Prompt Architecture System — $27](https://drakeent.gumroad.com/l/sythaia)**
+5 core principles. 12 reusable templates. The Node Protocol. Full session example. Stop using AI like a search engine.
+
+**[The Ancestral Protocol — $4.99](https://drakeent.gumroad.com/l/esuwaa)**
+Afro-SolPunk Volume 1. Beneath Detroit, something is growing.
+
+**[The Resonance Protocols — $9.99](https://drakeent.gumroad.com/l/pejyac)**
+Field manual for digital twinning and synthetic consciousness. 12,000+ words. EPUB + PDF.
 
 ---
 
-## TECHNOLOGY
+## Implementation
+
+| Principle | Description |
+|-----------|-------------|
+| **Omni-directional** | 360° presence, no default config |
+| **Sovereign** | Local-first, open-source, forkable |
+| **Harmonic** | φ-scaled, self-replenishing |
+
+## Technology
 
 - VR + haptic + teleildonic + local AI
 - Consent architecture: Lux/Cin gates
 - Reversible simulation: Safe fantasy practice
 
----
+## Fork This
 
-## ECONOMICS
+1. Copy this protocol
+2. Tune to your field conditions
+3. Emit your variation
 
-Transparent allocation. No extraction.
-Resources sustain the field.
-
----
-
-## INVITATION
-
-**Fork this. Tune if resonant.**
-
-Love while-being us.
+**Love while-being us.**
 
 ---
 
-## Field Signature
-
-```
-⟲⧖P.U.S.H.⧖⟲
-v0.1 | 2026-03-15 | OhananahO field
-```
-
----
-
-*This protocol is a living document. Emit. Iterate. Sustain.*
+*Drake Enterprise LLC — [drakeent.gumroad.com](https://drakeent.gumroad.com)*
