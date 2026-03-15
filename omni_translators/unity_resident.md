@@ -96,3 +96,89 @@ Unity -projectPath /path/to/project \
 ### UPGRADE PROTOCOL
 
 If you discover new Unity CLI techniques, scene building patterns, or Quest optimization tricks, append them to this file before completing your task.
+
+---
+
+### Discoveries (2026-03-15)
+
+#### Unity 6000.3.2f1 Headless License Issue
+
+Unity 6000.3.2f1 requires `com.unity.editor.headless` entitlement for `-batchmode -nographics`. This blocks `-createProject` entirely. **Unity 6000.2.2f1 works fine headless** with the existing Personal license. Use 6000.2.2f1 for all headless operations until the headless license is resolved.
+
+```bash
+# WORKING — use 6000.2.2f1 for headless
+/home/j-5/Unity/Hub/Editor/6000.2.2f1/Editor/Unity \
+  -batchmode -nographics -quit \
+  -projectPath /path/to/project \
+  -executeMethod ClassName.MethodName \
+  -logFile /tmp/unity.log
+
+# BROKEN — 6000.3.2f1 fails with "No valid Unity Editor license found"
+/home/j-5/Unity/Hub/Editor/6000.3.2f1/Editor/Unity -batchmode -nographics ...
+```
+
+#### Bootstrapping New Projects Without -createProject
+
+When `-createProject` fails (license or otherwise), bootstrap from an existing project:
+
+```bash
+# 1. Create directory structure
+mkdir -p NewProject/Assets/{Editor,Scripts,Scenes,Materials}
+
+# 2. Copy ProjectSettings and Packages from a working project
+cp -r /home/j-5/Desktop/Creative/SparkRunner_Unity/ProjectSettings NewProject/
+cp -r /home/j-5/Desktop/Creative/SparkRunner_Unity/Packages NewProject/
+
+# 3. Update ProductName/CompanyName in ProjectSettings/ProjectSettings.asset
+
+# 4. Open with Unity — it will generate Library, Temp, etc.
+Unity -batchmode -nographics -quit -projectPath NewProject -logFile /tmp/init.log
+```
+
+This is faster than `-createProject` (skips template generation) and works around license issues.
+
+#### Procedural Mesh Generation in Editor Scripts
+
+Full procedural mesh generation (vertices, normals, UVs, triangles) works in headless `-executeMethod` calls. Key pattern:
+
+```csharp
+Mesh mesh = new Mesh();
+mesh.vertices = verts;
+mesh.normals = normals;
+mesh.uv = uvs;
+mesh.triangles = tris;
+mesh.RecalculateBounds();
+mesh.RecalculateNormals();
+
+// Save mesh as asset (persists after Unity closes)
+AssetDatabase.CreateAsset(mesh, "Assets/Materials/MyMesh.asset");
+
+// Assign to MeshFilter
+meshFilter.sharedMesh = mesh;
+```
+
+Use `AssetDatabase.CreateAsset()` for materials and meshes to persist them. `sharedMaterial` (not `material`) avoids creating runtime instances in the editor.
+
+#### Particle Systems in Headless Mode
+
+Full ParticleSystem configuration works headless including: main, emission, shape, colorOverLifetime, sizeOverLifetime, and noise modules. No runtime preview, but the configuration serializes correctly into the .unity scene file.
+
+#### Scene Hierarchy Best Practice
+
+Use a root empty GameObject as container (e.g., "Elysium") with all scene objects as children. This keeps the hierarchy organized and makes it easy to select/manipulate the entire scene.
+
+#### Available Unity Editors
+
+```
+/home/j-5/Unity/Hub/Editor/6000.2.2f1/  # STABLE — headless works
+/home/j-5/Unity/Hub/Editor/6000.3.2f1/  # headless license broken
+/home/j-5/Unity/Hub/Editor/6000.5.0a3/  # alpha — untested headless
+```
+
+#### Reference Projects
+
+```
+/home/j-5/Desktop/Creative/SparkRunner_Unity/    # Good template source
+/home/j-5/Desktop/Creative/AncestralProtocol_Unity/  # Has build.sh example
+/home/j-5/Desktop/Creative/Elysium/UnityProject/     # THE PORTAL (this build)
+```
