@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+    <title>THE PORTAL — Elysium 3D</title>
+    <meta name="description" content="Explore The Portal in 3D. A lemniscate gateway where consciousness, code, and creation converge. Built on P.U.S.H. Protocol. WebGL experience — no downloads required.">
+    <meta property="og:title" content="THE PORTAL — Elysium 3D">
+    <meta property="og:description" content="Step into The Portal. A living 3D gateway built on P.U.S.H. Protocol and SolPunk architecture.">
+    <meta property="og:image" content="./assets/ThePortal_render_v2.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --void: #050208;
+            --deep-purple: #1a0a2e;
+            --bright-purple: #B464FF;
+            --electric-purple: #9B30FF;
+            --gold: #FFD700;
+            --warm-gold: #E8B84B;
+            --teal: #00E5CC;
+            --bio-green: #18F090;
+            --soft-white: #E8E0F0;
+            --muted: #6B5B8D;
+        }
+
+        body {
+            background: var(--void);
+            color: var(--soft-white);
+            font-family: 'Space Grotesk', system-ui, sans-serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #canvas3d {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        /* === TITLE OVERLAY === */
+        .title-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 28px 24px 20px;
+            text-align: center;
+            z-index: 10;
+            pointer-events: none;
+            background: linear-gradient(to bottom, rgba(5, 2, 8, 0.7) 0%, rgba(5, 2, 8, 0.3) 60%, transparent 100%);
+        }
+
+        .title-main {
+            font-size: clamp(1.6rem, 4vw, 3rem);
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            background: linear-gradient(135deg, var(--bright-purple), var(--gold), var(--teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-transform: uppercase;
+            filter: drop-shadow(0 0 20px rgba(180, 100, 255, 0.5));
+            margin-bottom: 6px;
+        }
+
+        .title-sub {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(0.6rem, 1.2vw, 0.8rem);
+            color: var(--muted);
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+        }
+
+        /* === CONTROLS HINT === */
+        .controls-hint {
+            position: fixed;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            pointer-events: none;
+            text-align: center;
+            opacity: 0.6;
+            transition: opacity 1.5s ease;
+        }
+
+        .controls-hint.faded { opacity: 0; }
+
+        .controls-hint p {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--muted);
+            letter-spacing: 0.15em;
+        }
+
+        /* === BACK LINK === */
+        .back-link {
+            position: fixed;
+            top: 24px;
+            left: 24px;
+            z-index: 20;
+            text-decoration: none;
+            color: var(--muted);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            padding: 8px 14px;
+            border: 1px solid rgba(180, 100, 255, 0.15);
+            border-radius: 8px;
+            background: rgba(5, 2, 8, 0.6);
+            backdrop-filter: blur(8px);
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: var(--bright-purple);
+            border-color: rgba(180, 100, 255, 0.4);
+            box-shadow: 0 0 20px rgba(180, 100, 255, 0.1);
+        }
+
+        /* === LOADING === */
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--void);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            transition: opacity 1s ease;
+        }
+
+        .loading-overlay.done {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--bright-purple);
+            letter-spacing: 0.2em;
+            margin-bottom: 20px;
+        }
+
+        .loading-bar-track {
+            width: 200px;
+            height: 2px;
+            background: rgba(180, 100, 255, 0.15);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .loading-bar-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--bright-purple), var(--gold));
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        /* === PURCHASE BANNER === */
+        #purchase-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 15, 0.95);
+            border-top: 1px solid rgba(180, 100, 255, 0.3);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            font-family: system-ui, sans-serif;
+            z-index: 9999;
+            backdrop-filter: blur(8px);
+        }
+
+        #purchase-banner .banner-label {
+            color: var(--bright-purple);
+            font-size: 0.8em;
+        }
+
+        #purchase-banner a {
+            padding: 6px 14px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.78em;
+            font-weight: 600;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        #purchase-banner a:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(180, 100, 255, 0.3);
+        }
+
+        .btn-push {
+            background: linear-gradient(135deg, #B464FF, #7B2FD4);
+            color: #fff;
+        }
+
+        .btn-sythaia {
+            background: linear-gradient(135deg, #FFD700, #B464FF);
+            color: #0a0a0f;
+        }
+
+        .banner-close {
+            color: #445;
+            font-size: 0.7em;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+
+        .banner-close:hover { color: #667; }
+
+        @media (max-width: 600px) {
+            #purchase-banner { gap: 8px; padding: 8px 12px; }
+            #purchase-banner a { font-size: 0.7em; padding: 5px 10px; }
+            .back-link { top: 12px; left: 12px; font-size: 0.65rem; padding: 6px 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading">
+    <div class="loading-text">ENTERING THE PORTAL</div>
+    <div class="loading-bar-track">
+        <div class="loading-bar-fill" id="loading-bar"></div>
+    </div>
+</div>
+
+<!-- 3D CANVAS -->
+<canvas id="canvas3d"></canvas>
+
+<!-- BACK LINK -->
+<a href="./elysium.html" class="back-link">&larr; ELYSIUM</a>
+
+<!-- TITLE -->
+<div class="title-overlay">
+    <h1 class="title-main">The Portal</h1>
+    <p class="title-sub">Elysium // SolPunk Architecture // WebGL</p>
+</div>
+
+<!-- CONTROLS HINT -->
+<div class="controls-hint" id="controls-hint">
+    <p>DRAG TO ORBIT &middot; SCROLL TO ZOOM &middot; RIGHT-DRAG TO PAN</p>
+</div>
+
+<!-- PURCHASE BANNER -->
+<div id="purchase-banner">
+    <span class="banner-label">P.U.S.H. Protocol v0.1</span>
+    <a href="https://drakeent.gumroad.com/l/push-protocol" target="_blank" class="btn-push">Get the Full Package &mdash; $9.99</a>
+    <a href="https://drakeent.gumroad.com/l/sythaia" target="_blank" class="btn-sythaia">SythAIA &mdash; $27</a>
+    <span class="banner-close" onclick="this.parentElement.remove()">&times;</span>
+</div>
+
+<script type="importmap">
+{
+    "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+// === SETUP ===
+const canvas = document.getElementById('canvas3d');
+const renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias: true,
+    alpha: false
+});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050208);
+
+// === FOG ===
+scene.fog = new THREE.FogExp2(0x050208, 0.04);
+
+// === CAMERA ===
+const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 200);
+camera.position.set(0, 3.5, 10);
+camera.lookAt(0, 2, 0);
+
+// === CONTROLS ===
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.minDistance = 3;
+controls.maxDistance = 30;
+controls.maxPolarAngle = Math.PI * 0.85;
+controls.target.set(0, 2, 0);
+controls.update();
+
+// Fade controls hint on interaction
+let interacted = false;
+controls.addEventListener('start', () => {
+    if (!interacted) {
+        interacted = true;
+        document.getElementById('controls-hint').classList.add('faded');
+    }
+});
+
+// === LIGHTING ===
+
+// Ambient fill
+const ambient = new THREE.AmbientLight(0x1a0a2e, 0.4);
+scene.add(ambient);
+
+// Hemisphere light: purple sky, teal ground
+const hemi = new THREE.HemisphereLight(0x2d1b69, 0x00332e, 0.5);
+scene.add(hemi);
+
+// Gold point light (from Blender scene)
+const goldLight = new THREE.PointLight(0xffd700, 2.5, 25, 1.5);
+goldLight.position.set(0, 5, 0);
+goldLight.castShadow = true;
+goldLight.shadow.mapSize.width = 1024;
+goldLight.shadow.mapSize.height = 1024;
+scene.add(goldLight);
+
+// Teal area light approximation (using point light + rect)
+const tealLight = new THREE.PointLight(0x00e5cc, 1.8, 20, 1.5);
+tealLight.position.set(-3, 3, 2);
+scene.add(tealLight);
+
+// Purple accent from behind
+const purpleLight = new THREE.PointLight(0xB464FF, 1.2, 20, 1.5);
+purpleLight.position.set(2, 4, -3);
+scene.add(purpleLight);
+
+// Ground rim glow
+const rimLight = new THREE.PointLight(0x18F090, 0.6, 15, 2);
+rimLight.position.set(0, 0.3, 5);
+scene.add(rimLight);
+
+// === PROCEDURAL GROUND (fallback / enhancement) ===
+const groundGeo = new THREE.PlaneGeometry(80, 80);
+const groundMat = new THREE.MeshStandardMaterial({
+    color: 0x050208,
+    roughness: 0.15,
+    metalness: 0.85,
+    envMapIntensity: 0.3,
+});
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -0.01;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// === PROCEDURAL LEMNISCATE PORTAL (always present — enhances GLB or serves as fallback) ===
+function createLemniscatePortal() {
+    const segments = 200;
+    const scale = 3.0;
+    const points = [];
+
+    for (let i = 0; i <= segments; i++) {
+        const t = (i / segments) * Math.PI * 2;
+        const denom = 1 + Math.sin(t) * Math.sin(t);
+        const x = scale * Math.cos(t) / denom;
+        const y = scale * Math.sin(t) * Math.cos(t) / denom;
+        points.push(new THREE.Vector3(x, y + 3.0, 0));
+    }
+
+    const curve = new THREE.CatmullRomCurve3(points, true);
+    const tubeGeo = new THREE.TubeGeometry(curve, 200, 0.08, 16, true);
+
+    // Emissive portal material
+    const tubeMat = new THREE.MeshStandardMaterial({
+        color: 0xB464FF,
+        emissive: 0xB464FF,
+        emissiveIntensity: 0.8,
+        roughness: 0.2,
+        metalness: 0.7,
+        transparent: true,
+        opacity: 0.9,
+    });
+
+    const tube = new THREE.Mesh(tubeGeo, tubeMat);
+    tube.castShadow = true;
+    scene.add(tube);
+
+    // Outer glow tube
+    const glowGeo = new THREE.TubeGeometry(curve, 200, 0.25, 16, true);
+    const glowMat = new THREE.MeshBasicMaterial({
+        color: 0xB464FF,
+        transparent: true,
+        opacity: 0.06,
+        side: THREE.DoubleSide,
+    });
+    const glow = new THREE.Mesh(glowGeo, glowMat);
+    scene.add(glow);
+
+    return { tube, glow, tubeMat, glowMat };
+}
+
+const portal = createLemniscatePortal();
+
+// === PROCEDURAL BIOLUMINESCENT PLANTS ===
+function createSolPlant(x, z, hue) {
+    const group = new THREE.Group();
+    group.position.set(x, 0, z);
+
+    const coneGeo = new THREE.ConeGeometry(0.15, 0.8, 8);
+    const coneMat = new THREE.MeshStandardMaterial({
+        color: new THREE.Color().setHSL(hue, 0.9, 0.4),
+        emissive: new THREE.Color().setHSL(hue, 0.9, 0.25),
+        emissiveIntensity: 1.0,
+        roughness: 0.3,
+        metalness: 0.2,
+        transparent: true,
+        opacity: 0.85,
+    });
+    const cone = new THREE.Mesh(coneGeo, coneMat);
+    cone.position.y = 0.4;
+    cone.castShadow = true;
+    group.add(cone);
+
+    // Plant glow
+    const glowGeo = new THREE.SphereGeometry(0.3, 16, 16);
+    const glowMat = new THREE.MeshBasicMaterial({
+        color: new THREE.Color().setHSL(hue, 1.0, 0.5),
+        transparent: true,
+        opacity: 0.08,
+    });
+    const glowSphere = new THREE.Mesh(glowGeo, glowMat);
+    glowSphere.position.y = 0.5;
+    group.add(glowSphere);
+
+    // Tiny point light per plant
+    const plantLight = new THREE.PointLight(
+        new THREE.Color().setHSL(hue, 0.9, 0.5),
+        0.3, 3, 2
+    );
+    plantLight.position.y = 0.6;
+    group.add(plantLight);
+
+    scene.add(group);
+    return { group, cone, coneMat, glowMat };
+}
+
+const plants = [];
+const plantPositions = [
+    [-2.0, 1.5], [-1.2, 2.5], [1.5, 1.0], [2.3, 2.0],
+    [-2.5, -1.0], [-1.0, -2.0], [1.8, -1.5], [2.8, -0.5]
+];
+const plantHues = [0.45, 0.50, 0.35, 0.55, 0.42, 0.48, 0.38, 0.52]; // teal-green range
+
+plantPositions.forEach((pos, i) => {
+    plants.push(createSolPlant(pos[0], pos[1], plantHues[i]));
+});
+
+// === FLOATING PARTICLE MOTES ===
+const MOTE_COUNT = 500;
+const moteGeo = new THREE.BufferGeometry();
+const motePositions = new Float32Array(MOTE_COUNT * 3);
+const moteColors = new Float32Array(MOTE_COUNT * 3);
+const moteSizes = new Float32Array(MOTE_COUNT);
+const moteVelocities = [];
+
+const palette = [
+    new THREE.Color(0xB464FF),
+    new THREE.Color(0xFFD700),
+    new THREE.Color(0x00E5CC),
+    new THREE.Color(0x18F090),
+];
+
+for (let i = 0; i < MOTE_COUNT; i++) {
+    motePositions[i * 3] = (Math.random() - 0.5) * 20;
+    motePositions[i * 3 + 1] = Math.random() * 10;
+    motePositions[i * 3 + 2] = (Math.random() - 0.5) * 20;
+
+    const color = palette[Math.floor(Math.random() * palette.length)];
+    moteColors[i * 3] = color.r;
+    moteColors[i * 3 + 1] = color.g;
+    moteColors[i * 3 + 2] = color.b;
+
+    moteSizes[i] = Math.random() * 3 + 1;
+
+    moteVelocities.push({
+        x: (Math.random() - 0.5) * 0.005,
+        y: (Math.random() - 0.5) * 0.003 + 0.002,
+        z: (Math.random() - 0.5) * 0.005,
+        phase: Math.random() * Math.PI * 2,
+    });
+}
+
+moteGeo.setAttribute('position', new THREE.BufferAttribute(motePositions, 3));
+moteGeo.setAttribute('color', new THREE.BufferAttribute(moteColors, 3));
+moteGeo.setAttribute('size', new THREE.BufferAttribute(moteSizes, 1));
+
+const moteMat = new THREE.PointsMaterial({
+    size: 0.05,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.6,
+    blending: THREE.AdditiveBlending,
+    sizeAttenuation: true,
+    depthWrite: false,
+});
+
+const motes = new THREE.Points(moteGeo, moteMat);
+scene.add(motes);
+
+// === LOAD GLB MODEL ===
+const loadingBar = document.getElementById('loading-bar');
+const loadingOverlay = document.getElementById('loading');
+let glbLoaded = false;
+
+const loader = new GLTFLoader();
+loader.load(
+    './assets/ThePortal.glb',
+    (gltf) => {
+        const model = gltf.scene;
+
+        // Enhance materials from the GLB
+        model.traverse((child) => {
+            if (child.isMesh) {
+                child.castShadow = true;
+                child.receiveShadow = true;
+
+                if (child.material) {
+                    // Enhance the Blender materials
+                    child.material.roughness = Math.min(child.material.roughness || 0.5, 0.6);
+                    child.material.metalness = Math.max(child.material.metalness || 0.3, 0.3);
+                    child.material.needsUpdate = true;
+                }
+            }
+        });
+
+        scene.add(model);
+        glbLoaded = true;
+
+        loadingBar.style.width = '100%';
+        setTimeout(() => loadingOverlay.classList.add('done'), 500);
+    },
+    (progress) => {
+        if (progress.total > 0) {
+            const pct = Math.min((progress.loaded / progress.total) * 100, 95);
+            loadingBar.style.width = pct + '%';
+        }
+    },
+    (error) => {
+        console.warn('GLB load failed, using procedural scene:', error);
+        // Procedural scene is already built — just dismiss loading
+        loadingBar.style.width = '100%';
+        setTimeout(() => loadingOverlay.classList.add('done'), 500);
+    }
+);
+
+// If loading takes too long, dismiss after 8 seconds
+setTimeout(() => {
+    if (!glbLoaded) {
+        loadingBar.style.width = '100%';
+        setTimeout(() => loadingOverlay.classList.add('done'), 300);
+    }
+}, 8000);
+
+// === ANIMATION LOOP ===
+const clock = new THREE.Clock();
+
+function animate() {
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+    const dt = clock.getDelta();
+
+    // Portal pulse
+    portal.tubeMat.emissiveIntensity = 0.6 + 0.4 * Math.sin(t * 1.5);
+    portal.glowMat.opacity = 0.04 + 0.04 * Math.sin(t * 1.5);
+
+    // Gold light flicker
+    goldLight.intensity = 2.2 + 0.5 * Math.sin(t * 2.0) + 0.2 * Math.sin(t * 5.3);
+
+    // Plant pulse
+    plants.forEach((plant, i) => {
+        const phase = t * 1.2 + i * 0.8;
+        plant.coneMat.emissiveIntensity = 0.7 + 0.5 * Math.sin(phase);
+        plant.glowMat.opacity = 0.05 + 0.05 * Math.sin(phase);
+        plant.cone.scale.y = 1.0 + 0.05 * Math.sin(phase);
+    });
+
+    // Particle motes movement
+    const positions = moteGeo.attributes.position.array;
+    for (let i = 0; i < MOTE_COUNT; i++) {
+        const v = moteVelocities[i];
+        positions[i * 3] += v.x + Math.sin(t * 0.5 + v.phase) * 0.002;
+        positions[i * 3 + 1] += v.y + Math.sin(t * 0.3 + v.phase) * 0.001;
+        positions[i * 3 + 2] += v.z + Math.cos(t * 0.5 + v.phase) * 0.002;
+
+        // Reset particles that go too far
+        if (positions[i * 3 + 1] > 12) {
+            positions[i * 3] = (Math.random() - 0.5) * 20;
+            positions[i * 3 + 1] = -1;
+            positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
+        }
+        if (Math.abs(positions[i * 3]) > 12 || Math.abs(positions[i * 3 + 2]) > 12) {
+            positions[i * 3] = (Math.random() - 0.5) * 10;
+            positions[i * 3 + 1] = Math.random() * 5;
+            positions[i * 3 + 2] = (Math.random() - 0.5) * 10;
+        }
+    }
+    moteGeo.attributes.position.needsUpdate = true;
+
+    controls.update();
+    renderer.render(scene, camera);
+}
+
+animate();
+
+// === RESIZE ===
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+</script>
+
+</body>
+</html>
