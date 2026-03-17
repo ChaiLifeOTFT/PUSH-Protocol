@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Tesseract Infinity Mirror</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+  canvas { display: block; width: 100%; height: 100%; }
+
+  #ui-overlay {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    pointer-events: none; z-index: 10;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 16px;
+  }
+
+  #controls-hint {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
+    text-align: center;
+    line-height: 1.6;
+    letter-spacing: 0.5px;
+    transition: opacity 0.8s ease;
+  }
+
+  #controls-hint.faded { opacity: 0; }
+
+  #title-bar {
+    position: fixed; top: 20px; left: 0; right: 0;
+    text-align: center; pointer-events: none; z-index: 10;
+  }
+
+  #title-bar h1 {
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    font-weight: 300;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.15);
+  }
+
+  /* Touch 4D rotation zones */
+  .touch-zone {
+    position: fixed;
+    pointer-events: auto;
+    z-index: 5;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .touch-zone:active { opacity: 1; }
+
+  #touch-4d-left {
+    left: 0; top: 30%; width: 60px; height: 40%;
+    background: linear-gradient(to right, rgba(0,200,255,0.08), transparent);
+    border-radius: 0 12px 12px 0;
+  }
+  #touch-4d-right {
+    right: 0; top: 30%; width: 60px; height: 40%;
+    background: linear-gradient(to left, rgba(255,0,200,0.08), transparent);
+    border-radius: 12px 0 0 12px;
+  }
+  #touch-4d-top {
+    top: 0; left: 20%; width: 60%; height: 50px;
+    background: linear-gradient(to bottom, rgba(0,255,150,0.08), transparent);
+    border-radius: 0 0 12px 12px;
+  }
+  #touch-4d-bottom {
+    bottom: 0; left: 20%; width: 60%; height: 50px;
+    background: linear-gradient(to top, rgba(255,200,0,0.08), transparent);
+    border-radius: 12px 12px 0 0;
+  }
+
+  @media (min-width: 769px) {
+    .touch-zone { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="title-bar"><h1>Tesseract &middot; Infinity Mirror</h1></div>
+
+<div id="ui-overlay">
+  <div id="controls-hint">
+    <span class="desktop-only">DRAG to orbit &middot; SCROLL to zoom &middot; ARROW KEYS / WASD for 4D rotation &middot; SPACE to pause</span>
+    <span class="mobile-only">DRAG to orbit &middot; PINCH to zoom &middot; EDGE SWIPES for 4D rotation</span>
+  </div>
+</div>
+
+<!-- Mobile 4D touch zones -->
+<div id="touch-4d-left" class="touch-zone"></div>
+<div id="touch-4d-right" class="touch-zone"></div>
+<div id="touch-4d-top" class="touch-zone"></div>
+<div id="touch-4d-bottom" class="touch-zone"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+
+<script>
+(function() {
+  'use strict';
+
+  // ──────────────────────────────────────────────
+  // CONFIGURATION
+  // ──────────────────────────────────────────────
+  const CONFIG = {
+    mirrorLayers: 14,           // infinity mirror depth layers
+    mirrorScaleStep: 0.72,      // scale multiplier per layer
+    mirrorOpacityStep: 0.68,    // opacity multiplier per layer
+    mirrorDepthStep: 3.5,       // z-offset per layer
+    autoRotateSpeed4D: 0.15,    // radians/sec for auto 4D rotation
+    manualRotateSpeed: 1.8,     // radians/sec for keyboard 4D rotation
+    projectionDistance4D: 3.0,  // 4D perspective distance
+    colorCycleSpeed: 0.08,      // hue shift per second
+    edgeBaseWidth: 2.5,         // line width (where supported)
+    vertexSize: 0.04,           // vertex sphere radius
+    bloomStrength: 2.2,
+    bloomRadius: 0.8,
+    bloomThreshold: 0.05,
+    baseTesseractScale: 1.8,
+    particleCount: 200,
+    backgroundStarCount: 600,
+  };
+
+  // ──────────────────────────────────────────────
+  // 4D TESSERACT GEOMETRY
+  // ──────────────────────────────────────────────
+
+  // 16 vertices: all combinations of (+-1, +-1, +-1, +-1)
+  function generateVertices() {
+    const verts = [];
+    for (let i = 0; i < 16; i++) {
+      verts.push([
+        (i & 1) ? 1 : -1,
+        (i & 2) ? 1 : -1,
+        (i & 4) ? 1 : -1,
+        (i & 8) ? 1 : -1,
+      ]);
+    }
+    return verts;
+  }
+
+  // 32 edges: connect vertices differing in exactly one coordinate
+  function generateEdges(vertices) {
+    const edges = [];
+    for (let i = 0; i < vertices.length; i++) {
+      for (let j = i + 1; j < vertices.length; j++) {
+        let diff = 0;
+        for (let k = 0; k < 4; k++) {
+          if (vertices[i][k] !== vertices[j][k]) diff++;
+        }
+        if (diff === 1) edges.push([i, j]);
+      }
+    }
+    return edges;
+  }
+
+  // 4D rotation matrices (applied to a 4-vector)
+  function rotateXW(v, angle) {
+    const c = Math.cos(angle), s = Math.sin(angle);
+    return [
+      c * v[0] - s * v[3],
+      v[1],
+      v[2],
+      s * v[0] + c * v[3]
+    ];
+  }
+
+  function rotateYW(v, angle) {
+    const c = Math.cos(angle), s = Math.sin(angle);
+    return [
+      v[0],
+      c * v[1] - s * v[3],
+      v[2],
+      s * v[1] + c * v[3]
+    ];
+  }
+
+  function rotateZW(v, angle) {
+    const c = Math.cos(angle), s = Math.sin(angle);
+    return [
+      v[0],
+      v[1],
+      c * v[2] - s * v[3],
+      s * v[2] + c * v[3]
+    ];
+  }
+
+  function rotateXY(v, angle) {
+    const c = Math.cos(angle), s = Math.sin(angle);
+    return [
+      c * v[0] - s * v[1],
+      s * v[0] + c * v[1],
+      v[2],
+      v[3]
+    ];
+  }
+
+  function rotateXZ(v, angle) {
+    const c = Math.cos(angle), s = Math.sin(angle);
+    return [
+      c * v[0] - s * v[2],
+      v[1],
+      s * v[0] + c * v[2],
+      v[3]
+    ];
+  }
+
+  // Project 4D → 3D using perspective projection
+  function project4Dto3D(v4, d) {
+    const w = d - v4[3];
+    const scale = (w > 0.1) ? d / w : d / 0.1;
+    return {
+      x: v4[0] * scale,
+      y: v4[1] * scale,
+      z: v4[2] * scale,
+      w: v4[3],        // keep w for coloring
+      depth: scale      // depth factor for effects
+    };
+  }
+
+  // ──────────────────────────────────────────────
+  // THREE.JS SETUP
+  // ──────────────────────────────────────────────
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 500);
+  camera.position.set(0, 0, 8);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x000000, 1);
+  renderer.toneMapping = THREE.ReinhardToneMapping;
+  renderer.toneMappingExposure = 1.5;
+  document.body.appendChild(renderer.domElement);
+
+  // Orbit controls
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+  controls.rotateSpeed = 0.5;
+  controls.zoomSpeed = 0.8;
+  controls.minDistance = 2;
+  controls.maxDistance = 30;
+  controls.enablePan = false;
+
+  // Bloom post-processing
+  const composer = new THREE.EffectComposer(renderer);
+  const renderPass = new THREE.RenderPass(scene, camera);
+  composer.addPass(renderPass);
+
+  const bloomPass = new THREE.UnrealBloomPass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    CONFIG.bloomStrength,
+    CONFIG.bloomRadius,
+    CONFIG.bloomThreshold
+  );
+  composer.addPass(bloomPass);
+
+  // ──────────────────────────────────────────────
+  // CUSTOM SHADERS for glowing tube edges
+  // ──────────────────────────────────────────────
+
+  const edgeVertexShader = `
+    attribute float edgeOpacity;
+    attribute vec3 edgeColor;
+    varying float vOpacity;
+    varying vec3 vColor;
+    varying vec3 vWorldPos;
+
+    void main() {
+      vOpacity = edgeOpacity;
+      vColor = edgeColor;
+      vec4 worldPos = modelMatrix * vec4(position, 1.0);
+      vWorldPos = worldPos.xyz;
+      gl_Position = projectionMatrix * viewMatrix * worldPos;
+    }
+  `;
+
+  const edgeFragmentShader = `
+    varying float vOpacity;
+    varying vec3 vColor;
+    varying vec3 vWorldPos;
+
+    void main() {
+      // Glow intensity
+      float glow = vOpacity;
+      vec3 finalColor = vColor * (1.0 + glow * 2.0);
+      gl_FragColor = vec4(finalColor, glow);
+    }
+  `;
+
+  // ──────────────────────────────────────────────
+  // TESSERACT DATA
+  // ──────────────────────────────────────────────
+  const vertices4D = generateVertices();
+  const edges = generateEdges(vertices4D);
+
+  // ──────────────────────────────────────────────
+  // STATE
+  // ──────────────────────────────────────────────
+  const state = {
+    angleXW: 0,
+    angleYW: 0,
+    angleZW: 0,
+    angleXY: 0,
+    angleXZ: 0,
+    hue: 0,
+    time: 0,
+    paused: false,
+    keys: {},
+    touchActive: { left: false, right: false, top: false, bottom: false },
+  };
+
+  // ──────────────────────────────────────────────
+  // BUILD MIRROR LAYERS
+  // ──────────────────────────────────────────────
+
+  // Each mirror layer is a group containing edges (as tubes) and vertices (as spheres)
+  const mirrorLayers = [];
+
+  // Tube geometry for a single edge segment
+  function createTubeEdge(p1, p2, radius, color, opacity) {
+    const dir = new THREE.Vector3().subVectors(p2, p1);
+    const len = dir.length();
+    if (len < 0.001) return null;
+
+    const geom = new THREE.CylinderGeometry(radius, radius, len, 6, 1, true);
+    const mat = new THREE.MeshBasicMaterial({
+      color: color,
+      transparent: true,
+      opacity: opacity,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+
+    const mesh = new THREE.Mesh(geom, mat);
+    const mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
+    mesh.position.copy(mid);
+
+    // Orient cylinder along the edge direction
+    const axis = new THREE.Vector3(0, 1, 0);
+    const dirNorm = dir.clone().normalize();
+    const quat = new THREE.Quaternion().setFromUnitVectors(axis, dirNorm);
+    mesh.quaternion.copy(quat);
+
+    return mesh;
+  }
+
+  // Create vertex glow sphere
+  function createVertexSphere(pos, radius, color, opacity) {
+    const geom = new THREE.SphereGeometry(radius, 8, 6);
+    const mat = new THREE.MeshBasicMaterial({
+      color: color,
+      transparent: true,
+      opacity: opacity,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.position.copy(pos);
+    return mesh;
+  }
+
+  // Line-based edges for a layer (fallback / additional glow)
+  function createLineEdges(projected, edgeList, color, opacity) {
+    const positions = [];
+    for (const [a, b] of edgeList) {
+      positions.push(projected[a].x, projected[a].y, projected[a].z);
+      positions.push(projected[b].x, projected[b].y, projected[b].z);
+    }
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+
+    const mat = new THREE.LineBasicMaterial({
+      color: color,
+      transparent: true,
+      opacity: opacity * 0.6,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    return new THREE.LineSegments(geom, mat);
+  }
+
+  // Initialize all mirror layers
+  function initMirrorLayers() {
+    for (let layer = 0; layer < CONFIG.mirrorLayers; layer++) {
+      const group = new THREE.Group();
+      const scale = Math.pow(CONFIG.mirrorScaleStep, layer);
+      const opacity = Math.pow(CONFIG.mirrorOpacityStep, layer);
+      const zOffset = -layer * CONFIG.mirrorDepthStep * scale;
+
+      group.userData = {
+        layerIndex: layer,
+        baseScale: scale,
+        baseOpacity: opacity,
+        zOffset: zOffset,
+        edgeMeshes: [],
+        vertexMeshes: [],
+        lineMesh: null,
+      };
+
+      scene.add(group);
+      mirrorLayers.push(group);
+    }
+  }
+
+  initMirrorLayers();
+
+  // ──────────────────────────────────────────────
+  // BACKGROUND STARS
+  // ──────────────────────────────────────────────
+  function createStarfield() {
+    const positions = new Float32Array(CONFIG.backgroundStarCount * 3);
+    const colors = new Float32Array(CONFIG.backgroundStarCount * 3);
+    const sizes = new Float32Array(CONFIG.backgroundStarCount);
+
+    for (let i = 0; i < CONFIG.backgroundStarCount; i++) {
+      // Distribute in a large sphere
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      const r = 80 + Math.random() * 120;
+      positions[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
+      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      positions[i * 3 + 2] = r * Math.cos(phi);
+
+      // Faint blue/purple/white tones
+      const h = 0.55 + Math.random() * 0.2;
+      const s = 0.2 + Math.random() * 0.3;
+      const l = 0.4 + Math.random() * 0.5;
+      const c = new THREE.Color().setHSL(h, s, l);
+      colors[i * 3]     = c.r;
+      colors[i * 3 + 1] = c.g;
+      colors[i * 3 + 2] = c.b;
+
+      sizes[i] = 0.3 + Math.random() * 1.2;
+    }
+
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geom.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    geom.setAttribute('size', new THREE.Float32BufferAttribute(sizes, 1));
+
+    const mat = new THREE.PointsMaterial({
+      size: 0.5,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.4,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      sizeAttenuation: true,
+    });
+
+    const stars = new THREE.Points(geom, mat);
+    scene.add(stars);
+    return stars;
+  }
+
+  const starfield = createStarfield();
+
+  // ──────────────────────────────────────────────
+  // AMBIENT PARTICLES (floating dust motes)
+  // ──────────────────────────────────────────────
+  function createParticles() {
+    const positions = new Float32Array(CONFIG.particleCount * 3);
+    const velocities = [];
+
+    for (let i = 0; i < CONFIG.particleCount; i++) {
+      positions[i * 3]     = (Math.random() - 0.5) * 20;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 20;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
+      velocities.push({
+        x: (Math.random() - 0.5) * 0.003,
+        y: (Math.random() - 0.5) * 0.003,
+        z: (Math.random() - 0.5) * 0.003,
+      });
+    }
+
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+
+    const mat = new THREE.PointsMaterial({
+      size: 0.08,
+      color: 0x8888ff,
+      transparent: true,
+      opacity: 0.25,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      sizeAttenuation: true,
+    });
+
+    const points = new THREE.Points(geom, mat);
+    scene.add(points);
+    return { points, velocities };
+  }
+
+  const particles = createParticles();
+
+  // ──────────────────────────────────────────────
+  // UPDATE TESSERACT PROJECTION
+  // ──────────────────────────────────────────────
+
+  function getProjectedVertices() {
+    const projected = [];
+    for (let i = 0; i < vertices4D.length; i++) {
+      let v = [...vertices4D[i]];
+
+      // Apply 4D rotations
+      v = rotateXW(v, state.angleXW);
+      v = rotateYW(v, state.angleYW);
+      v = rotateZW(v, state.angleZW);
+      v = rotateXY(v, state.angleXY);
+      v = rotateXZ(v, state.angleXZ);
+
+      // Project 4D → 3D
+      const p = project4Dto3D(v, CONFIG.projectionDistance4D);
+      projected.push(p);
+    }
+    return projected;
+  }
+
+  function getEdgeColor(hue, wAvg, layerIndex) {
+    // Color varies by w-coordinate and layer depth
+    const layerHueShift = layerIndex * 0.04;
+    const wHueShift = wAvg * 0.08;
+    const h = (hue + layerHueShift + wHueShift) % 1;
+    const s = 0.85 + 0.15 * Math.sin(wAvg * 2);
+    const l = 0.55 + 0.2 * Math.cos(wAvg * 1.5);
+    return new THREE.Color().setHSL(h, s, l);
+  }
+
+  function updateMirrorLayers(projected) {
+    for (let layer = 0; layer < mirrorLayers.length; layer++) {
+      const group = mirrorLayers[layer];
+      const ud = group.userData;
+      const scale = ud.baseScale * CONFIG.baseTesseractScale;
+      const opacity = ud.baseOpacity;
+
+      // Clear previous children
+      while (group.children.length > 0) {
+        const child = group.children[0];
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) child.material.dispose();
+        group.remove(child);
+      }
+
+      // Tube radius shrinks with depth
+      const tubeRadius = 0.025 * Math.pow(0.85, layer);
+
+      // Add tube edges
+      for (const [a, b] of edges) {
+        const pa = projected[a];
+        const pb = projected[b];
+        const wAvg = (pa.w + pb.w) * 0.5;
+        const depthAvg = (pa.depth + pb.depth) * 0.5;
+
+        const color = getEdgeColor(state.hue, wAvg, layer);
+
+        // Depth-based brightness modulation
+        const depthBright = 0.5 + 0.5 * Math.min(depthAvg / 3, 1);
+        const edgeOpacity = opacity * depthBright;
+
+        const p1 = new THREE.Vector3(pa.x * scale, pa.y * scale, pa.z * scale + ud.zOffset);
+        const p2 = new THREE.Vector3(pb.x * scale, pb.y * scale, pb.z * scale + ud.zOffset);
+
+        const tube = createTubeEdge(p1, p2, tubeRadius, color, edgeOpacity);
+        if (tube) group.add(tube);
+      }
+
+      // Add line-based edges for extra glow on front layers
+      if (layer < 5) {
+        const scaledProjected = projected.map(p => ({
+          x: p.x * scale,
+          y: p.y * scale,
+          z: p.z * scale + ud.zOffset,
+        }));
+        const lineColor = getEdgeColor(state.hue, 0, layer);
+        const lineMesh = createLineEdges(scaledProjected, edges, lineColor, opacity * 0.4);
+        group.add(lineMesh);
+      }
+
+      // Add vertex spheres for first few layers
+      if (layer < 6) {
+        const sphereRadius = CONFIG.vertexSize * Math.pow(0.8, layer);
+        for (let i = 0; i < projected.length; i++) {
+          const p = projected[i];
+          const pos = new THREE.Vector3(p.x * scale, p.y * scale, p.z * scale + ud.zOffset);
+          const color = getEdgeColor(state.hue + 0.1, p.w, layer);
+          const sphere = createVertexSphere(pos, sphereRadius, color, opacity * 0.9);
+          group.add(sphere);
+        }
+      }
+    }
+  }
+
+  // ──────────────────────────────────────────────
+  // UPDATE PARTICLES
+  // ──────────────────────────────────────────────
+
+  function updateParticles() {
+    const positions = particles.points.geometry.attributes.position.array;
+    for (let i = 0; i < CONFIG.particleCount; i++) {
+      const v = particles.velocities[i];
+      positions[i * 3]     += v.x;
+      positions[i * 3 + 1] += v.y;
+      positions[i * 3 + 2] += v.z;
+
+      // Wrap around
+      for (let j = 0; j < 3; j++) {
+        if (positions[i * 3 + j] > 10) positions[i * 3 + j] = -10;
+        if (positions[i * 3 + j] < -10) positions[i * 3 + j] = 10;
+      }
+    }
+    particles.points.geometry.attributes.position.needsUpdate = true;
+
+    // Subtle color pulse
+    const h = (state.hue + 0.5) % 1;
+    particles.points.material.color.setHSL(h, 0.5, 0.5);
+  }
+
+  // ──────────────────────────────────────────────
+  // INPUT HANDLING
+  // ──────────────────────────────────────────────
+
+  // Keyboard
+  document.addEventListener('keydown', (e) => {
+    state.keys[e.key.toLowerCase()] = true;
+    if (e.key === ' ') {
+      e.preventDefault();
+      state.paused = !state.paused;
+    }
+  });
+
+  document.addEventListener('keyup', (e) => {
+    state.keys[e.key.toLowerCase()] = false;
+  });
+
+  // Mobile touch zones
+  function setupTouchZone(id, stateKey) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      state.touchActive[stateKey] = true;
+    }, { passive: false });
+    el.addEventListener('touchend', () => {
+      state.touchActive[stateKey] = false;
+    });
+    el.addEventListener('touchcancel', () => {
+      state.touchActive[stateKey] = false;
+    });
+  }
+
+  setupTouchZone('touch-4d-left', 'left');
+  setupTouchZone('touch-4d-right', 'right');
+  setupTouchZone('touch-4d-top', 'top');
+  setupTouchZone('touch-4d-bottom', 'bottom');
+
+  // ──────────────────────────────────────────────
+  // RESPONSIVE HINTS
+  // ──────────────────────────────────────────────
+  function updateHints() {
+    const isMobile = window.innerWidth < 769;
+    const desktopHints = document.querySelectorAll('.desktop-only');
+    const mobileHints = document.querySelectorAll('.mobile-only');
+    desktopHints.forEach(el => el.style.display = isMobile ? 'none' : 'inline');
+    mobileHints.forEach(el => el.style.display = isMobile ? 'inline' : 'none');
+  }
+  updateHints();
+
+  // Fade out hints after 6 seconds
+  setTimeout(() => {
+    const hint = document.getElementById('controls-hint');
+    if (hint) hint.classList.add('faded');
+  }, 6000);
+
+  // ──────────────────────────────────────────────
+  // RESIZE
+  // ──────────────────────────────────────────────
+  window.addEventListener('resize', () => {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+    composer.setSize(w, h);
+    updateHints();
+  });
+
+  // ──────────────────────────────────────────────
+  // ANIMATION LOOP
+  // ──────────────────────────────────────────────
+
+  let lastTime = performance.now();
+
+  function animate(now) {
+    requestAnimationFrame(animate);
+
+    const dt = Math.min((now - lastTime) / 1000, 0.1);
+    lastTime = now;
+
+    if (!state.paused) {
+      state.time += dt;
+
+      // Auto 4D rotation (slow tumble through hyperspace)
+      const autoXW = CONFIG.autoRotateSpeed4D * dt;
+      const autoYW = CONFIG.autoRotateSpeed4D * 0.7 * dt;
+      const autoZW = CONFIG.autoRotateSpeed4D * 0.3 * dt;
+
+      state.angleXW += autoXW;
+      state.angleYW += autoYW;
+      state.angleZW += autoZW;
+
+      // Gentle auto-rotation in 3D planes too
+      state.angleXY += dt * 0.05;
+      state.angleXZ += dt * 0.03;
+
+      // Keyboard-driven 4D rotation
+      const manualSpeed = CONFIG.manualRotateSpeed * dt;
+      if (state.keys['arrowleft']  || state.keys['a']) state.angleXW -= manualSpeed;
+      if (state.keys['arrowright'] || state.keys['d']) state.angleXW += manualSpeed;
+      if (state.keys['arrowup']    || state.keys['w']) state.angleYW -= manualSpeed;
+      if (state.keys['arrowdown']  || state.keys['s']) state.angleYW += manualSpeed;
+      if (state.keys['q']) state.angleZW -= manualSpeed;
+      if (state.keys['e']) state.angleZW += manualSpeed;
+
+      // Touch-driven 4D rotation
+      const touchSpeed = CONFIG.manualRotateSpeed * dt;
+      if (state.touchActive.left)   state.angleXW -= touchSpeed;
+      if (state.touchActive.right)  state.angleXW += touchSpeed;
+      if (state.touchActive.top)    state.angleYW -= touchSpeed;
+      if (state.touchActive.bottom) state.angleYW += touchSpeed;
+
+      // Color cycling
+      state.hue = (state.hue + CONFIG.colorCycleSpeed * dt) % 1;
+    }
+
+    // Project and render
+    const projected = getProjectedVertices();
+    updateMirrorLayers(projected);
+    updateParticles();
+
+    // Subtle starfield rotation
+    starfield.rotation.y += dt * 0.002;
+    starfield.rotation.x += dt * 0.001;
+
+    // Bloom pulse
+    bloomPass.strength = CONFIG.bloomStrength + Math.sin(state.time * 0.5) * 0.3;
+
+    controls.update();
+    composer.render();
+  }
+
+  animate(performance.now());
+
+})();
+</script>
+</body>
+</html>
