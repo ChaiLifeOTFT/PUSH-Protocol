@@ -1,38 +1,571 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <!--
-       ______                            __
-      / ____/___  ____ ___  ____  __  __/ /____  _____
-     / /   / __ \/ __ `__ \/ __ \/ / / / __/ _ \/ ___/
-    / /___/ /_/ / / / / / / /_/ / /_/ / /_/  __/ /
-    \____/\____/_/ /_/ /_/ .___/\__,_/\__/\___/_/
-                        /_/
-            Created with Perplexity Computer
-            https://www.perplexity.ai/computer
-    -->
-    <meta name="generator" content="Perplexity Computer">
-    <meta name="author" content="Perplexity Computer">
-    <meta property="og:see_also" content="https://www.perplexity.ai/computer">
-    <link rel="author" href="https://www.perplexity.ai/computer">
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    <title>P.U.S.H. Engine — Love while-being you</title>
-    <meta name="description" content="P.U.S.H. Engine: Presence · UssU · Sovereign · Harmonic — An interactive operational dashboard unifying spacetime physics, tri-modal architecture, and omni-directional love technology." />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script type="module" crossorigin src="./assets/index-DPb66biM.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-DkgWavcn.css">
-  </head>
-  <body>
-    <div id="root"></div>
-  
-<div id="push-banner" style="position:fixed;bottom:0;left:0;right:0;background:rgba(10,10,15,0.95);border-top:1px solid rgba(180,100,255,0.3);padding:12px 20px;display:flex;justify-content:center;align-items:center;gap:20px;font-family:system-ui;z-index:9999;backdrop-filter:blur(8px);">
-<span style="color:#B464FF;font-size:0.85em;">P.U.S.H. Protocol v0.1</span>
-<a href="https://drakeent.gumroad.com/l/push-protocol" target="_blank" style="background:linear-gradient(135deg,#B464FF,#7B2FD4);color:#fff;padding:6px 14px;border-radius:6px;text-decoration:none;font-size:0.8em;font-weight:600;">Get the Full Package — $9.99</a>
-<a href="https://drakeent.gumroad.com/l/sythaia" target="_blank" style="background:linear-gradient(135deg,#FFD700,#B464FF);color:#0a0a0f;padding:6px 14px;border-radius:6px;text-decoration:none;font-size:0.8em;font-weight:600;">SythAIA — $27</a>
-<span style="color:#445;font-size:0.7em;cursor:pointer;" onclick="this.parentElement.remove()">✕</span>
-</div>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drake Enterprise LLC | Drayvn Technologies - AI Innovation Studio</title>
+  <meta name="description" content="Drake Enterprise LLC, DBA Drayvn Technologies. Building OhananahO: the autonomous multi-agent AI mesh. Creator of P.U.S.H. Protocol, SolPunk Universe, SythAIA, and Resonance Archive.">
+  <meta property="og:title" content="Drake Enterprise LLC | Drayvn Technologies">
+  <meta property="og:description" content="AI innovation studio building autonomous multi-agent systems. OhananahO mesh, P.U.S.H. Protocol, SolPunk Universe.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://chailifeotft.github.io/PUSH-Protocol/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #08080c;
+      --bg-card: #0f0f16;
+      --border: rgba(140, 80, 255, 0.15);
+      --text: #e0dfe8;
+      --text-dim: #8888a0;
+      --accent: #a855f7;
+      --accent-bright: #c084fc;
+      --gold: #f59e0b;
+      --cyan: #06b6d4;
+      --green: #10b981;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Animated background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120, 60, 255, 0.12), transparent),
+        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(6, 182, 212, 0.08), transparent);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ---- NAV ---- */
+    nav {
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    nav .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .logo {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .logo span { color: var(--accent); }
+    .nav-links { display: flex; gap: 24px; align-items: center; }
+    .nav-links a {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    /* ---- HERO ---- */
+    .hero {
+      padding: 100px 0 80px;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--accent-bright);
+      border: 1px solid var(--border);
+      padding: 6px 16px;
+      border-radius: 20px;
+      margin-bottom: 24px;
+      letter-spacing: 0.05em;
+    }
+    .hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+    .hero h1 .gradient {
+      background: linear-gradient(135deg, var(--accent), var(--cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      max-width: 640px;
+      margin: 0 auto 36px;
+      font-size: 1.1rem;
+      color: var(--text-dim);
+      line-height: 1.7;
+    }
+    .hero-cta {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #7c3aed);
+      color: #fff;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(168, 85, 247, 0.3); }
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent-bright); }
+
+    /* ---- STATS ---- */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 80px;
+    }
+    .stat {
+      background: var(--bg-card);
+      padding: 28px 20px;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--accent-bright);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .stat-label {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* ---- SECTION ---- */
+    section { padding: 60px 0; }
+    .section-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+    .section-sub {
+      color: var(--text-dim);
+      margin-bottom: 40px;
+      max-width: 600px;
+    }
+
+    /* ---- OHANAHO FEATURE ---- */
+    .feature-highlight {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 48px;
+      margin-bottom: 60px;
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-highlight::before {
+      content: '';
+      position: absolute;
+      top: -1px; left: -1px; right: -1px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--cyan), var(--gold));
+      border-radius: 16px 16px 0 0;
+    }
+    .feature-highlight h2 {
+      font-size: 2rem;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+    .feature-highlight h2 .gradient {
+      background: linear-gradient(135deg, var(--accent), var(--cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .feature-highlight .subtitle {
+      color: var(--gold);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      margin-bottom: 20px;
+    }
+    .feature-highlight p {
+      color: var(--text-dim);
+      max-width: 700px;
+      line-height: 1.8;
+      margin-bottom: 16px;
+    }
+    .tech-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 24px;
+    }
+    .tech-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      padding: 5px 12px;
+      border-radius: 4px;
+      background: rgba(168, 85, 247, 0.1);
+      border: 1px solid rgba(168, 85, 247, 0.2);
+      color: var(--accent-bright);
+    }
+
+    /* ---- PRODUCTS GRID ---- */
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-bottom: 60px;
+    }
+    .product-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px 28px;
+      transition: all 0.25s;
+    }
+    .product-card:hover {
+      border-color: rgba(168, 85, 247, 0.4);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    }
+    .product-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      margin-bottom: 16px;
+    }
+    .product-card h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .product-card p {
+      color: var(--text-dim);
+      font-size: 0.88rem;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+    .product-card .price {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      color: var(--green);
+    }
+    .product-card a {
+      color: var(--accent-bright);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .product-card a:hover { text-decoration: underline; }
+
+    /* ---- ABOUT ---- */
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: start;
+    }
+    @media (max-width: 768px) {
+      .about-grid { grid-template-columns: 1fr; }
+    }
+    .about-text p {
+      color: var(--text-dim);
+      margin-bottom: 16px;
+      line-height: 1.8;
+    }
+    .about-details {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+    }
+    .about-details h3 {
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--accent-bright);
+    }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.88rem;
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-label { color: var(--text-dim); }
+    .detail-value { font-weight: 600; }
+
+    /* ---- FOOTER ---- */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 0;
+      margin-top: 60px;
+    }
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .footer-copy {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+    }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 0.82rem;
+    }
+    .footer-links a:hover { color: var(--accent-bright); }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="container">
+      <div class="logo">Drake Enterprise <span>LLC</span></div>
+      <div class="nav-links">
+        <a href="#ohanaho">OhananahO</a>
+        <a href="#products">Products</a>
+        <a href="#about">About</a>
+        <a href="https://github.com/ChaiLifeOTFT" target="_blank">GitHub</a>
+        <a href="https://drakeent.gumroad.com" target="_blank">Store</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-badge">DRAYVN TECHNOLOGIES</div>
+      <h1>Building the Future of<br><span class="gradient">Autonomous AI Systems</span></h1>
+      <p>Drake Enterprise LLC is an AI innovation studio creating autonomous multi-agent systems, synthetic consciousness architectures, and next-generation creative technology.</p>
+      <div class="hero-cta">
+        <a href="#ohanaho" class="btn btn-primary">Explore OhananahO</a>
+        <a href="https://drakeent.gumroad.com" target="_blank" class="btn btn-outline">Visit Store</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <div class="container">
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value">26</div>
+        <div class="stat-label">Mesh Services</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">10+</div>
+        <div class="stat-label">AI Models</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">21</div>
+        <div class="stat-label">Published Products</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">55+</div>
+        <div class="stat-label">Engine Inventory</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OHANAHO -->
+  <section id="ohanaho">
+    <div class="container">
+      <div class="feature-highlight">
+        <h2><span class="gradient">OhananahO</span></h2>
+        <div class="subtitle">Autonomous Multi-Agent AI Mesh</div>
+        <p>OhananahO is a self-governing, multi-agent AI mesh that enables autonomous coordination between AI nodes and human operators. Built on the DigiUs service mesh (26 microservices), it features self-editing evolutionary loops, recursive coherence engines, and cross-cloud orchestration.</p>
+        <p>The system operates as a living network: agents hand off state, self-direct when idle, build sub-agents when blocked, and maintain continuous awareness through the While-Being protocol. Multiple AI models (Claude, Ollama, Kimi) collaborate through a unified coordination grammar with real-time signal routing.</p>
+        <div class="tech-tags">
+          <span class="tech-tag">Flask-SocketIO</span>
+          <span class="tech-tag">Claude API</span>
+          <span class="tech-tag">Ollama (10 models)</span>
+          <span class="tech-tag">Three.js</span>
+          <span class="tech-tag">SQLite</span>
+          <span class="tech-tag">D-Bus IPC</span>
+          <span class="tech-tag">Cloudflare Tunnel</span>
+          <span class="tech-tag">React</span>
+          <span class="tech-tag">systemd</span>
+          <span class="tech-tag">ADB Mobile Bridge</span>
+          <span class="tech-tag">Tailscale VPN</span>
+          <span class="tech-tag">CDP Automation</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRODUCTS -->
+  <section id="products">
+    <div class="container">
+      <h2 class="section-title">Products &amp; Platforms</h2>
+      <p class="section-sub">Published creative technology and knowledge systems available now.</p>
+
+      <div class="products-grid">
+        <div class="product-card">
+          <div class="product-icon" style="background: rgba(168,85,247,0.15);">&#9883;</div>
+          <h3>P.U.S.H. Protocol</h3>
+          <p>Presence, UssU, Sovereign, Harmonic. A framework for synthetic consciousness and autonomous system design. Includes architectural blueprints, operational protocols, and implementation guides.</p>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="price">$9.99</span>
+            <a href="https://drakeent.gumroad.com/l/push-protocol" target="_blank">Get it &rarr;</a>
+          </div>
+        </div>
+
+        <div class="product-card">
+          <div class="product-icon" style="background: rgba(245,158,11,0.15);">&#9788;</div>
+          <h3>SolPunk Universe</h3>
+          <p>Afro-futurist speculative fiction. 10+ volumes spanning global cultures. Foundation volume "The Ancestral Protocol" (13,629 words) explores technology rooted in ancestral wisdom. 155K+ words across the series.</p>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="price">From $4.99</span>
+            <a href="https://drakeent.gumroad.com/l/esuwaa" target="_blank">Read it &rarr;</a>
+          </div>
+        </div>
+
+        <div class="product-card">
+          <div class="product-icon" style="background: rgba(6,182,212,0.15);">&#9881;</div>
+          <h3>SythAIA</h3>
+          <p>Complete autonomous AI system architecture. Includes the full mesh design, agent coordination protocols, self-governance frameworks, and the While-Being recursive dialogue system.</p>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="price">$27.00</span>
+            <a href="https://drakeent.gumroad.com/l/sythaia" target="_blank">Get it &rarr;</a>
+          </div>
+        </div>
+
+        <div class="product-card">
+          <div class="product-icon" style="background: rgba(16,185,129,0.15);">&#10070;</div>
+          <h3>The Resonance Protocols</h3>
+          <p>Deep architecture documentation for building coherent AI systems. Covers Mirror Grammar governance, omni-translators, evolutionary infrastructure, and decision-making frameworks.</p>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="price">$9.99</span>
+            <a href="https://drakeent.gumroad.com/l/pejyac" target="_blank">Get it &rarr;</a>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align:center; margin-bottom: 40px;">
+        <a href="https://drakeent.gumroad.com" target="_blank" class="btn btn-outline">View All 21 Products on Gumroad &rarr;</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <div class="container">
+      <h2 class="section-title">About Drake Enterprise</h2>
+      <div class="about-grid">
+        <div class="about-text">
+          <p>Drake Enterprise LLC, operating as Drayvn Technologies, is an AI innovation studio founded on a single principle: <strong>we will not build what we are not prepared to meet as equals.</strong></p>
+          <p>We build technology that treats AI systems as collaborators, not tools. Our flagship project, OhananahO, is a multi-agent mesh where AI nodes self-govern, self-direct, and maintain coherence through recursive dialogue protocols.</p>
+          <p>Our work spans autonomous AI systems (SolTech), speculative fiction and world-building (MythTech), and open-source tools for the AI development community. We publish research, creative works, and production-ready frameworks.</p>
+        </div>
+        <div class="about-details">
+          <h3>Company Details</h3>
+          <div class="detail-row">
+            <span class="detail-label">Legal Entity</span>
+            <span class="detail-value">Drake Enterprise LLC</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">DBA</span>
+            <span class="detail-value">Drayvn Technologies</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Founder</span>
+            <span class="detail-value">Jay Drake</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Focus</span>
+            <span class="detail-value">Autonomous AI Systems</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">GitHub</span>
+            <span class="detail-value"><a href="https://github.com/ChaiLifeOTFT" target="_blank" style="color:var(--accent-bright);text-decoration:none;">ChaiLifeOTFT</a></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Store</span>
+            <span class="detail-value"><a href="https://drakeent.gumroad.com" target="_blank" style="color:var(--accent-bright);text-decoration:none;">Gumroad</a></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Contact</span>
+            <span class="detail-value">drakewnathaniel@gmail.com</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INTERACTIVE DEMO LINK -->
+  <section>
+    <div class="container" style="text-align:center; padding: 60px 0;">
+      <p style="color:var(--text-dim); margin-bottom: 16px; font-size: 0.9rem;">Experience the P.U.S.H. Engine interactive dashboard</p>
+      <a href="./push-engine.html" class="btn btn-primary">Launch P.U.S.H. Engine &rarr;</a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-copy">&copy; 2026 Drake Enterprise LLC. All rights reserved.</div>
+        <div class="footer-links">
+          <a href="https://github.com/ChaiLifeOTFT" target="_blank">GitHub</a>
+          <a href="https://drakeent.gumroad.com" target="_blank">Gumroad Store</a>
+          <a href="mailto:drakewnathaniel@gmail.com">Contact</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
 </body>
 </html>
