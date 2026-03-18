@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Torus Studio — Drake Enterprise</title>
+<style>
+  :root {
+    --gold: #f5c542;
+    --gold-dim: #a68c2a;
+    --green: #4ade80;
+    --red: #ef4444;
+    --bg: #0a0a0f;
+    --surface: #14141f;
+    --surface2: #1e1e2e;
+    --text: #e4e4ef;
+    --text-dim: #8888aa;
+    --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    overflow: hidden;
+    height: 100vh;
+    display: grid;
+    grid-template-columns: 320px 1fr 320px;
+    grid-template-rows: 56px 1fr 48px;
+  }
+
+  /* ── Header ── */
+  header {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    border-bottom: 1px solid #2a2a3a;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 16px;
+  }
+  header h1 {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--gold);
+  }
+  header .subtitle {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+  }
+  header .metrics {
+    margin-left: auto;
+    display: flex;
+    gap: 20px;
+    font-size: 12px;
+    font-family: var(--mono);
+  }
+  header .metric {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  header .metric .value {
+    color: var(--gold);
+    font-size: 14px;
+    font-weight: 600;
+  }
+  header .metric .label {
+    color: var(--text-dim);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* ── Left Panel ── */
+  .panel-left {
+    background: var(--surface);
+    border-right: 1px solid #2a2a3a;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .panel-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .panel-section h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    border-bottom: 1px solid #2a2a3a;
+    padding-bottom: 6px;
+  }
+
+  /* ── Canvas ── */
+  #torus-canvas {
+    background: var(--bg);
+    cursor: grab;
+  }
+  #torus-canvas:active { cursor: grabbing; }
+
+  /* ── Right Panel ── */
+  .panel-right {
+    background: var(--surface);
+    border-left: 1px solid #2a2a3a;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* ── Footer ── */
+  footer {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    border-top: 1px solid #2a2a3a;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    gap: 20px;
+  }
+  footer .expanding {
+    color: var(--gold);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+
+  /* ── Controls ── */
+  input, select, textarea {
+    background: var(--surface2);
+    border: 1px solid #2a2a3a;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.2s;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--gold-dim);
+  }
+  textarea { resize: vertical; min-height: 60px; font-family: var(--mono); font-size: 12px; }
+
+  button {
+    background: var(--gold);
+    color: #000;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: var(--font);
+  }
+  button:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  button:active { transform: translateY(0); }
+  button.secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid #2a2a3a;
+  }
+  button.expand-btn { background: var(--green); }
+  button.bridge-btn { background: #8b5cf6; color: #fff; }
+  button.small { padding: 4px 10px; font-size: 11px; }
+
+  /* ── Node List ── */
+  .node-item {
+    background: var(--surface2);
+    border: 1px solid #2a2a3a;
+    border-radius: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .node-item:hover { border-color: var(--gold-dim); }
+  .node-item.selected { border-color: var(--gold); box-shadow: 0 0 12px rgba(245, 197, 66, 0.15); }
+  .node-item .node-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  .node-item .node-id {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--gold);
+  }
+  .node-item .node-mode {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .mode-illustration { background: #3b82f620; color: #60a5fa; }
+  .mode-animation { background: #8b5cf620; color: #a78bfa; }
+  .mode-stage_3d { background: #f59e0b20; color: #fbbf24; }
+  .mode-text { background: #4ade8020; color: #4ade80; }
+  .mode-audio { background: #ef444420; color: #f87171; }
+  .mode-default { background: #64748b20; color: #94a3b8; }
+  .node-item .node-intent {
+    font-size: 12px;
+    color: var(--text);
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+  .node-item .node-stats {
+    display: flex;
+    gap: 12px;
+    margin-top: 6px;
+    font-size: 10px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+  }
+
+  /* ── Detail View ── */
+  .detail-field {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .detail-field .label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+  }
+  .detail-field .value {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text);
+    word-break: break-all;
+  }
+
+  .bar {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--surface2);
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .bar .fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+  .bar .fill.gold { background: var(--gold); }
+  .bar .fill.green { background: var(--green); }
+
+  .actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3a3a4a; }
+
+  /* ── Lineage View ── */
+  .lineage-chain {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+  .lineage-node {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    background: var(--surface2);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .lineage-node:hover { background: #2a2a3a; }
+  .lineage-arrow { color: var(--gold-dim); }
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header>
+  <h1>◎ TORUS STUDIO</h1>
+  <span class="subtitle">Drake Enterprise, LLC</span>
+  <div class="metrics">
+    <div class="metric">
+      <span class="value" id="m-nodes">0</span>
+      <span class="label">Nodes</span>
+    </div>
+    <div class="metric">
+      <span class="value" id="m-edges">0</span>
+      <span class="label">Edges</span>
+    </div>
+    <div class="metric">
+      <span class="value" id="m-area">0</span>
+      <span class="label">Surface Area</span>
+    </div>
+    <div class="metric">
+      <span class="value" id="m-radius">0</span>
+      <span class="label">Major R</span>
+    </div>
+    <div class="metric">
+      <span class="value" id="m-coherence">0</span>
+      <span class="label">Coherence</span>
+    </div>
+    <div class="metric">
+      <span class="value" id="m-gen">0</span>
+      <span class="label">Max Gen</span>
+    </div>
+  </div>
+</header>
+
+<!-- ── Left Panel: Seed & Node List ── -->
+<div class="panel-left">
+  <div class="panel-section">
+    <h3>Seed Intent</h3>
+    <input type="text" id="seed-intent" placeholder="cyberpunk warrior with neon katana...">
+    <select id="seed-mode">
+      <option value="illustration">Illustration</option>
+      <option value="animation">Animation</option>
+      <option value="stage_3d">3D Stage</option>
+      <option value="text">Text / Narrative</option>
+      <option value="audio">Audio</option>
+    </select>
+    <input type="text" id="seed-tags" placeholder="Tags (comma-separated)">
+    <button onclick="doSeed()">⊕ Seed</button>
+  </div>
+
+  <div class="panel-section">
+    <h3>Nodes <span id="node-count" style="color:var(--gold)">(0)</span></h3>
+    <select id="filter-mode" onchange="refreshNodes()">
+      <option value="">All modes</option>
+      <option value="illustration">Illustration</option>
+      <option value="animation">Animation</option>
+      <option value="stage_3d">3D Stage</option>
+      <option value="text">Text</option>
+      <option value="audio">Audio</option>
+    </select>
+    <div id="node-list"></div>
+  </div>
+</div>
+
+<!-- ── Canvas: Torus Visualizer ── -->
+<canvas id="torus-canvas"></canvas>
+
+<!-- ── Right Panel: Detail & Actions ── -->
+<div class="panel-right">
+  <div class="panel-section" id="detail-empty">
+    <h3>Node Detail</h3>
+    <p style="font-size:12px;color:var(--text-dim);">Select a node to view details and perform actions.</p>
+  </div>
+
+  <div class="panel-section" id="detail-view" style="display:none;">
+    <h3>Selected Node</h3>
+    <div class="detail-field">
+      <span class="label">ID</span>
+      <span class="value" id="d-id"></span>
+    </div>
+    <div class="detail-field">
+      <span class="label">Mode</span>
+      <span class="value" id="d-mode"></span>
+    </div>
+    <div class="detail-field">
+      <span class="label">State</span>
+      <span class="value" id="d-state"></span>
+    </div>
+    <div class="detail-field">
+      <span class="label">Essence</span>
+      <span class="value" id="d-essence"></span>
+    </div>
+    <div class="detail-field">
+      <span class="label">Intent</span>
+      <span class="value" id="d-intent"></span>
+    </div>
+    <div class="detail-field">
+      <span class="label">Generation</span>
+      <span class="value" id="d-gen"></span>
+    </div>
+    <div class="detail-field">
+      <span class="label">Potential</span>
+      <div class="bar"><div class="fill gold" id="d-potential-bar"></div></div>
+      <span class="value" id="d-potential"></span>
+    </div>
+    <div class="detail-field">
+      <span class="label">Coherence</span>
+      <div class="bar"><div class="fill green" id="d-coherence-bar"></div></div>
+      <span class="value" id="d-coherence"></span>
+    </div>
+    <div class="detail-field">
+      <span class="label">Tags</span>
+      <span class="value" id="d-tags"></span>
+    </div>
+
+    <h3 style="margin-top:12px;">Transform</h3>
+    <select id="transform-mode">
+      <option value="illustration">→ Illustration</option>
+      <option value="animation">→ Animation</option>
+      <option value="stage_3d">→ 3D Stage</option>
+      <option value="text">→ Text</option>
+      <option value="audio">→ Audio</option>
+    </select>
+    <button onclick="doTransform()">Transform</button>
+
+    <h3 style="margin-top:12px;">Expand</h3>
+    <div class="actions">
+      <button class="expand-btn small" onclick="doExpand('bifurcate')">Bifurcate</button>
+      <button class="expand-btn small" onclick="doExpand('broadcast')">Broadcast</button>
+      <button class="expand-btn small" onclick="doExpand('deepen')">Deepen</button>
+      <button class="expand-btn small" onclick="doExpand('mutate')">Mutate</button>
+      <button class="expand-btn small" onclick="doExpand('amplify')">Amplify</button>
+      <button class="bridge-btn small" onclick="doBridge()">Bridge →</button>
+    </div>
+
+    <h3 style="margin-top:12px;">Lineage</h3>
+    <div class="lineage-chain" id="d-lineage"></div>
+  </div>
+</div>
+
+<!-- ── Footer ── -->
+<footer>
+  <span class="expanding">◎ torus expanding</span>
+  <span id="f-status">Ready</span>
+  <span style="margin-left:auto;">The output is the expansion.</span>
+</footer>
+
+<script>
+// ─── State ───
+let graphData = { nodes: [], edges: [], metrics: {} };
+let selectedNodeId = null;
+let selectedNode = null;
+
+const API = '';  // Same origin
+
+// ─── API Calls ───
+
+async function api(method, path, body = null) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || res.statusText);
+  }
+  return res.json();
+}
+
+// ─── Actions ───
+
+async function doSeed() {
+  const intent = document.getElementById('seed-intent').value.trim();
+  if (!intent) return;
+  const mode = document.getElementById('seed-mode').value;
+  const tagsRaw = document.getElementById('seed-tags').value.trim();
+  const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
+
+  status('Seeding...');
+  const node = await api('POST', '/api/seed', { intent, mode, tags });
+  document.getElementById('seed-intent').value = '';
+  document.getElementById('seed-tags').value = '';
+  await refresh();
+  selectNode(node.id);
+  status(`Seeded: ${node.id}`);
+}
+
+async function doTransform() {
+  if (!selectedNodeId) return;
+  const targetMode = document.getElementById('transform-mode').value;
+  status('Transforming...');
+  const node = await api('POST', '/api/transform', { node_id: selectedNodeId, target_mode: targetMode });
+  await refresh();
+  selectNode(node.id);
+  status(`Transformed → ${targetMode}`);
+}
+
+async function doExpand(strategy) {
+  if (!selectedNodeId) return;
+  status(`Expanding: ${strategy}...`);
+  const results = await api('POST', '/api/expand', { node_id: selectedNodeId, strategy });
+  await refresh();
+  if (results.length > 0) selectNode(results[0].id);
+  status(`Expanded: ${results.length} new node(s)`);
+}
+
+async function doBridge() {
+  if (!selectedNodeId) return;
+  const targetMode = document.getElementById('transform-mode').value;
+  status(`Bridging → ${targetMode}...`);
+  const results = await api('POST', '/api/expand', {
+    node_id: selectedNodeId, strategy: 'bridge', target_mode: targetMode
+  });
+  await refresh();
+  if (results.length > 0) selectNode(results[0].id);
+  status(`Bridged → ${targetMode}`);
+}
+
+// ─── Refresh ───
+
+async function refresh() {
+  graphData = await api('GET', '/api/graph');
+  const metrics = await api('GET', '/api/metrics');
+  updateMetrics(metrics);
+  refreshNodes();
+  drawTorus();
+}
+
+function updateMetrics(m) {
+  document.getElementById('m-nodes').textContent = m.total_nodes;
+  document.getElementById('m-edges').textContent = m.total_edges;
+  document.getElementById('m-area').textContent = m.surface_area.toFixed(1);
+  document.getElementById('m-radius').textContent = m.major_radius.toFixed(2);
+  document.getElementById('m-coherence').textContent = m.mean_coherence.toFixed(3);
+  document.getElementById('m-gen').textContent = m.max_generation;
+}
+
+function refreshNodes() {
+  const filterMode = document.getElementById('filter-mode').value;
+  let nodes = graphData.nodes;
+  if (filterMode) nodes = nodes.filter(n => n.mode === filterMode);
+
+  const container = document.getElementById('node-list');
+  document.getElementById('node-count').textContent = `(${nodes.length})`;
+
+  container.innerHTML = nodes.map(n => `
+    <div class="node-item ${n.id === selectedNodeId ? 'selected' : ''}"
+         onclick="selectNode('${n.id}')">
+      <div class="node-header">
+        <span class="node-id">${n.id}</span>
+        <span class="node-mode mode-${n.mode}">${n.mode}</span>
+      </div>
+      ${n.intent ? `<div class="node-intent">${escHtml(n.intent)}</div>` : ''}
+      <div class="node-stats">
+        <span>gen:${n.generation}</span>
+        <span>pot:${n.potential.toFixed(2)}</span>
+        <span>coh:${n.coherence.toFixed(3)}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function selectNode(nodeId) {
+  selectedNodeId = nodeId;
+  const node = graphData.nodes.find(n => n.id === nodeId);
+  if (!node) return;
+  selectedNode = node;
+
+  document.getElementById('detail-empty').style.display = 'none';
+  document.getElementById('detail-view').style.display = '';
+
+  document.getElementById('d-id').textContent = node.id;
+  document.getElementById('d-mode').textContent = node.mode;
+  document.getElementById('d-state').textContent = node.state;
+  document.getElementById('d-essence').textContent = node.essence;
+  document.getElementById('d-intent').textContent = node.intent || '—';
+  document.getElementById('d-gen').textContent = node.generation;
+  document.getElementById('d-potential').textContent = node.potential.toFixed(3);
+  document.getElementById('d-coherence').textContent = node.coherence.toFixed(3);
+  document.getElementById('d-potential-bar').style.width = `${Math.min(100, node.potential * 100)}%`;
+  document.getElementById('d-coherence-bar').style.width = `${node.coherence * 100}%`;
+  document.getElementById('d-tags').textContent = node.tags.join(', ') || '—';
+
+  // Lineage
+  try {
+    const lineage = await api('GET', `/api/lineage/${nodeId}`);
+    const container = document.getElementById('d-lineage');
+    container.innerHTML = lineage.map((n, i) => `
+      <div class="lineage-node" onclick="selectNode('${n.id}')">
+        ${i > 0 ? '<span class="lineage-arrow">└─</span>' : '<span class="lineage-arrow">◎</span>'}
+        <span class="node-mode mode-${n.mode}" style="font-size:9px;">${n.mode}</span>
+        <span>${n.id}</span>
+        <span style="color:var(--text-dim)">gen:${n.generation}</span>
+      </div>
+    `).join('');
+  } catch (e) { /* ignore */ }
+
+  refreshNodes();
+  drawTorus();
+}
+
+function status(msg) {
+  document.getElementById('f-status').textContent = msg;
+}
+
+function escHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ─── Torus Visualization (WebGL-free — pure Canvas 2D) ───
+
+const canvas = document.getElementById('torus-canvas');
+const ctx = canvas.getContext('2d');
+let rotX = 0.3, rotY = 0, animFrame = null;
+
+function resizeCanvas() {
+  const rect = canvas.parentElement ? canvas.getBoundingClientRect() : { width: 800, height: 600 };
+  canvas.width = canvas.clientWidth * (window.devicePixelRatio || 1);
+  canvas.height = canvas.clientHeight * (window.devicePixelRatio || 1);
+  ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+}
+
+function project(x, y, z) {
+  const fov = 500;
+  const zOff = 5;
+  const scale = fov / (z + zOff);
+  return {
+    x: x * scale + canvas.clientWidth / 2,
+    y: y * scale + canvas.clientHeight / 2,
+    scale
+  };
+}
+
+function rotate3D(x, y, z, rx, ry) {
+  // Rotate around Y
+  let x1 = x * Math.cos(ry) - z * Math.sin(ry);
+  let z1 = x * Math.sin(ry) + z * Math.cos(ry);
+  // Rotate around X
+  let y1 = y * Math.cos(rx) - z1 * Math.sin(rx);
+  let z2 = y * Math.sin(rx) + z1 * Math.cos(rx);
+  return { x: x1, y: y1, z: z2 };
+}
+
+const MODE_COLORS = {
+  illustration: '#60a5fa',
+  animation: '#a78bfa',
+  stage_3d: '#fbbf24',
+  text: '#4ade80',
+  audio: '#f87171',
+  default: '#94a3b8',
+};
+
+function drawTorus() {
+  if (animFrame) cancelAnimationFrame(animFrame);
+
+  const W = canvas.clientWidth;
+  const H = canvas.clientHeight;
+  ctx.clearRect(0, 0, W, H);
+
+  const R = Math.min(W, H) * 0.22;  // Major radius visual
+  const r = R * 0.35;                // Minor radius visual
+
+  // Draw torus wireframe
+  ctx.strokeStyle = 'rgba(245, 197, 66, 0.08)';
+  ctx.lineWidth = 0.5;
+
+  const SEGS_MAJOR = 48;
+  const SEGS_MINOR = 24;
+
+  // Draw rings around the tube
+  for (let i = 0; i < SEGS_MAJOR; i++) {
+    const theta = (i / SEGS_MAJOR) * Math.PI * 2;
+    ctx.beginPath();
+    for (let j = 0; j <= SEGS_MINOR; j++) {
+      const phi = (j / SEGS_MINOR) * Math.PI * 2;
+      const x = (R + r * Math.cos(phi)) * Math.cos(theta);
+      const y = r * Math.sin(phi);
+      const z = (R + r * Math.cos(phi)) * Math.sin(theta);
+      const rot = rotate3D(x, y, z, rotX, rotY);
+      const p = project(rot.x, rot.y, rot.z);
+      if (j === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    }
+    ctx.stroke();
+  }
+
+  // Draw rings along the tube
+  for (let j = 0; j < SEGS_MINOR; j++) {
+    const phi = (j / SEGS_MINOR) * Math.PI * 2;
+    ctx.beginPath();
+    for (let i = 0; i <= SEGS_MAJOR; i++) {
+      const theta = (i / SEGS_MAJOR) * Math.PI * 2;
+      const x = (R + r * Math.cos(phi)) * Math.cos(theta);
+      const y = r * Math.sin(phi);
+      const z = (R + r * Math.cos(phi)) * Math.sin(theta);
+      const rot = rotate3D(x, y, z, rotX, rotY);
+      const p = project(rot.x, rot.y, rot.z);
+      if (i === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    }
+    ctx.stroke();
+  }
+
+  // Place nodes on the torus surface
+  const nodes = graphData.nodes || [];
+  const edges = graphData.edges || [];
+
+  if (nodes.length === 0) {
+    ctx.fillStyle = 'rgba(245, 197, 66, 0.3)';
+    ctx.font = '14px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText('Seed an intent to begin expanding the torus', W / 2, H / 2);
+    return;
+  }
+
+  // Assign torus coordinates to nodes
+  const nodePositions = {};
+  nodes.forEach((node, idx) => {
+    const theta = (idx / nodes.length) * Math.PI * 2 + node.generation * 0.3;
+    const phi = (node.generation * 1.2 + idx * 0.7) % (Math.PI * 2);
+
+    const x = (R + r * Math.cos(phi)) * Math.cos(theta);
+    const y = r * Math.sin(phi);
+    const z = (R + r * Math.cos(phi)) * Math.sin(theta);
+    const rot = rotate3D(x, y, z, rotX, rotY);
+    const p = project(rot.x, rot.y, rot.z);
+    nodePositions[node.id] = { ...p, theta, phi };
+  });
+
+  // Draw edges
+  edges.forEach(edge => {
+    const from = nodePositions[edge.source];
+    const to = nodePositions[edge.target];
+    if (!from || !to) return;
+
+    ctx.beginPath();
+    ctx.moveTo(from.x, from.y);
+    ctx.lineTo(to.x, to.y);
+
+    const typeColors = {
+      transform: 'rgba(245, 197, 66, 0.3)',
+      bifurcate: 'rgba(74, 222, 128, 0.3)',
+      broadcast: 'rgba(139, 92, 246, 0.3)',
+      bridge: 'rgba(139, 92, 246, 0.5)',
+      recombine: 'rgba(251, 191, 36, 0.4)',
+      deepen: 'rgba(96, 165, 250, 0.3)',
+      mutate: 'rgba(248, 113, 113, 0.3)',
+    };
+    ctx.strokeStyle = typeColors[edge.type] || 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = edge.type === 'bridge' ? 2 : 1;
+    ctx.stroke();
+  });
+
+  // Draw nodes
+  nodes.forEach(node => {
+    const pos = nodePositions[node.id];
+    if (!pos) return;
+
+    const color = MODE_COLORS[node.mode] || MODE_COLORS.default;
+    const isSelected = node.id === selectedNodeId;
+    const radius = isSelected ? 8 : 4 + node.potential * 2;
+
+    // Glow
+    if (isSelected) {
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, radius + 8, 0, Math.PI * 2);
+      ctx.fillStyle = color.replace(')', ', 0.15)').replace('rgb', 'rgba');
+      ctx.fill();
+    }
+
+    // Node
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = isSelected ? '#fff' : color;
+    ctx.fill();
+
+    // Coherence ring
+    if (node.coherence < 0.5) {
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, radius + 3, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // Label (only for selected or gen 0)
+    if (isSelected || node.generation === 0) {
+      ctx.fillStyle = 'rgba(255,255,255,0.8)';
+      ctx.font = '10px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(node.id.slice(0, 6), pos.x, pos.y - radius - 4);
+    }
+  });
+}
+
+// ─── Interaction ───
+
+let isDragging = false, lastMX = 0, lastMY = 0;
+
+canvas.addEventListener('mousedown', e => {
+  isDragging = true;
+  lastMX = e.clientX;
+  lastMY = e.clientY;
+});
+
+canvas.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  const dx = e.clientX - lastMX;
+  const dy = e.clientY - lastMY;
+  rotY += dx * 0.005;
+  rotX += dy * 0.005;
+  lastMX = e.clientX;
+  lastMY = e.clientY;
+  drawTorus();
+});
+
+canvas.addEventListener('mouseup', () => { isDragging = false; });
+canvas.addEventListener('mouseleave', () => { isDragging = false; });
+
+// Click to select node
+canvas.addEventListener('click', e => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+
+  const nodes = graphData.nodes || [];
+  let closest = null, closestDist = Infinity;
+
+  const R = Math.min(canvas.clientWidth, canvas.clientHeight) * 0.22;
+  const r = R * 0.35;
+
+  nodes.forEach((node, idx) => {
+    const theta = (idx / nodes.length) * Math.PI * 2 + node.generation * 0.3;
+    const phi = (node.generation * 1.2 + idx * 0.7) % (Math.PI * 2);
+    const x = (R + r * Math.cos(phi)) * Math.cos(theta);
+    const y = r * Math.sin(phi);
+    const z = (R + r * Math.cos(phi)) * Math.sin(theta);
+    const rot = rotate3D(x, y, z, rotX, rotY);
+    const p = project(rot.x, rot.y, rot.z);
+
+    const dist = Math.sqrt((p.x - mx) ** 2 + (p.y - my) ** 2);
+    if (dist < closestDist) {
+      closestDist = dist;
+      closest = node;
+    }
+  });
+
+  if (closest && closestDist < 20) {
+    selectNode(closest.id);
+  }
+});
+
+// Auto-rotate
+function animate() {
+  if (!isDragging) {
+    rotY += 0.003;
+    drawTorus();
+  }
+  animFrame = requestAnimationFrame(animate);
+}
+
+// ─── Init ───
+
+window.addEventListener('resize', () => { resizeCanvas(); drawTorus(); });
+
+(async () => {
+  resizeCanvas();
+  try {
+    await refresh();
+    status('Connected');
+  } catch (e) {
+    status('Offline — start server: python -m studio.server');
+    drawTorus();
+  }
+  animate();
+})();
+</script>
+</body>
+</html>
