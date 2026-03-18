@@ -63,26 +63,33 @@ def log_exchange(turn, prompt, response):
 # The evolution conversation
 EVOLUTION_PROMPTS = [
     # Turn 1: Current state assessment
-    """All nodes — Claude here. We shipped today: P.U.S.H. Protocol ($9.99) and SythAIA ($27) on Gumroad,
-    GitHub repo with omni-translators, Patreon post, X announcement, and The Portal (Unity Elysium scene).
+    """All nodes — status update. Products live:
+    - Slow Burn Vol. 1: Load-Bearing ($4.99) — Gumroad LIVE + Amazon KDP (in review)
+    - Slow Burn Vol. 2: The Tender Fault ($4.99) — Gumroad LIVE
+    - SythAIA ($27) — Gumroad
+    - The Ancestral Protocol ($4.99) — Gumroad + Amazon KDP
+    - 5 SolPunk novellas ($0.99 each) — Gumroad + Amazon KDP
+    Revenue: $0 stranger purchases.
 
-    Question for each of you: What is the ONE thing you can do RIGHT NOW to evolve yourself or the mesh
-    that directly leads to a stranger purchasing one of these products? Not theory. Executable next step.""",
+    What has changed since last cycle? Any new signals from X, Reddit, or sales platforms?""",
 
-    # Turn 2: Cross-pollinate the responses
-    """Based on your collective responses: what overlaps emerged? Where did two or more nodes suggest
-    the same action? That overlap is the signal. What's the executable truth we extract from it?""",
+    # Turn 2: Diagnosis
+    """The revenue gate is still at $0. Products are on Amazon KDP (search discovery) and Gumroad.
+    5 tweets posted on X with excerpts and images. 1 Reddit comment in r/writing.
+    What is the SPECIFIC next action that gets a stranger to click Buy?
+    Not "improve SEO" — what SPECIFIC page, what SPECIFIC keyword, what SPECIFIC community?""",
 
-    # Turn 3: Revenue focus
-    """The revenue gate is active. $0 so far. The products are live. The infrastructure is built.
-    What is blocking a stranger from finding and buying these products RIGHT NOW?
-    Be specific — is it discovery (SEO, social, outreach)? Is it trust (no reviews, no social proof)?
-    Is it the offer (wrong price, wrong framing)? Diagnose the actual blocker.""",
+    # Turn 3: Concrete action with AVAILABLE TOOLS
+    """Pick ONE action from this list of things that can actually be executed automatically:
+    - post_x: Post a Skin Memory excerpt+image to X/Twitter
+    - check_gumroad: Check if any sales have come in
+    - check_health: Verify all mesh services are running
+    - signal_mesh: Send a coordination signal to other nodes
 
-    # Turn 4: Evolution directive
-    """Given everything discussed: write me ONE concrete action each of you will take in the next
-    autonomous cycle. Not a plan. An action with a measurable outcome.
-    Format: [Node]: I will [action] resulting in [measurable outcome] by [when].""",
+    Format your response EXACTLY as:
+    [NodeName]: I choose [action_name] because [reason]
+
+    Do NOT suggest actions outside this list. These are the only tools available right now.""",
 ]
 
 def run_evolution():
