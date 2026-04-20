@@ -25,6 +25,12 @@ Every product in this catalog is a compressed artifact of live work from the Oha
 | [**Algorithms of Ancestry** (Afro-SolPunk)](https://drakeent.gumroad.com/l/cjkqwa) | $15 — |
 | [**The Five-Phase River** (Chinese-SolPunk)](https://drakeent.gumroad.com/l/ejbjt) | $15 — |
 
+## Desktop apps
+
+| | |
+|---|---|
+| [**Drake Studio** — AI Manga Creation Tool](https://sweepsy.gumroad.com/l/umsdf) | **$29** — Desktop app. One-time purchase, no subscription. |
+
 ## Protocols / Guides
 
 | | |
