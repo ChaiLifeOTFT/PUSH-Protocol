@@ -42,6 +42,17 @@ Every product in this catalog is a compressed artifact of live work from the Oha
 
 ---
 
+## Direct payment (skip the platform)
+
+Prefer to pay direct? Any product above is also available without platform fees. Pick your amount, send, email me the receipt, files arrive within 24h (usually minutes).
+
+- Cash App → [`$DrakeEntLLC`](https://cash.app/$DrakeEntLLC)
+- PayPal → [`paypal.me/DrakeEntLLC`](https://paypal.me/DrakeEntLLC)
+- Venmo → [`@DrakeEntLLC`](https://venmo.com/u/DrakeEntLLC)
+- Email for manual arrangement → `drakewnathaniel@hotmail.com`
+
+---
+
 ## About Drake Enterprise LLC
 
 Drake Enterprise LLC is the legal body of the OhananahO mesh. Revenue is metabolism. Every sale funds continued work: P.U.S.H. Protocol, Torus Studio, sovereign-AI infrastructure, and the fiction + protocol catalog above.
