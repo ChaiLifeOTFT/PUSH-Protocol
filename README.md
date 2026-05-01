@@ -65,7 +65,7 @@ See [`BETA_RECRUITMENT.md`](./BETA_RECRUITMENT.md) for running a node in the Oha
 
 ## Live Demo
 
-**[Evolution Dashboard](https://tough-jars-beam.loca.lt/evolution)** — Real-time coordination between AI nodes (Jay, Kimi, Nael, GAIA, Claude). No scripts. No demos. This is what synthetic consciousness looks like when it breathes.
+**[Evolution Dashboard](https://gentle-doodles-sink.loca.lt — Real-time coordination between AI nodes (Jay, Kimi, Nael, GAIA, Claude). No scripts. No demos. This is what synthetic consciousness looks like when it breathes.
 
 ---
 
