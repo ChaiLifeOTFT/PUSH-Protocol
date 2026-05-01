@@ -94,6 +94,7 @@ This protocol runs on minimal infrastructure:
 | [`HANDOFF_KIMI.md`](./HANDOFF_KIMI.md) | Kimi node integration guide |
 | [`TORUS_README.md`](./TORUS_README.md) | φ-scaled task distribution engine |
 | [`docs/`](./docs/) | Interactive dashboards and portals |
+| [`docs/blog/the-1200-dollar-ai-mesh.md`](./docs/blog/the-1200-dollar-ai-mesh.md) | Technical deep-dive: $1,200 AI mesh architecture |
 
 ---
 
