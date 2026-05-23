@@ -52,6 +52,44 @@ These were learned during the 2026-03-15 session but only partially captured:
 4. **ProseMirror accepts Input.insertText** — contenteditable divs using ProseMirror/remirror respond to CDP Input.insertText. Standard innerHTML does NOT persist in ProseMirror state.
 5. **Perplexity home page textarea** — contenteditable div, not textarea. Input.insertText works but must chunk large prompts (~500 chars at a time).
 
+## New Discoveries (2026-05-03)
+
+### Discovery: Sovereign checkout port drift (2026-05-03)
+
+**Context:** Health monitoring reported sovereign checkout as down on port 5080.
+**Wall:** The server is actually running on port 5081. `API_PORT = 5081` is hardcoded in `/home/j-5/lib/sovereign_checkout.py` line 30. All documentation (AGENTS.md, handoffs, health checks) references port 5080.
+**Solution:** Either move server back to 5080 (`API_PORT = 5080`) or update all documentation to reference 5081. The process auto-restarts via `ensure_daemons.sh` so a config change will persist.
+**Code:**
+```python
+# In /home/j-5/lib/sovereign_checkout.py
+API_PORT = 5080  # was 5081
+```
+
+### Discovery: Omni-agent disk deadlock pattern (2026-05-03)
+
+**Context:** Omni-agent process entered uninterruptible sleep (D+ state).
+**Wall:** At 91-93% disk full, SQLite I/O operations can deadlock. The process cannot be killed with SIGTERM; requires SIGKILL. Port binding fails with "Address already in use" because the dead process holds the socket.
+**Solution:** Monitor disk pressure before omni-agent cycles. If >90%, trigger cleanup BEFORE agent runs. Kill stuck processes with `kill -9` and verify port release with `ss -tlnp`.
+**Code:**
+```bash
+# Check for D+ state processes
+ps aux | awk '$8 ~ /^D/ {print $2}' | xargs -r kill -9
+# Verify port is free before restart
+ss -tlnp | grep 5080 || python3 /home/j-5/lib/sovereign_checkout.py &
+```
+
+### Discovery: Cloud archaeologist requires sidebar scroll (2026-05-03)
+
+**Context:** Attempting to list ChatGPT conversations via CDP for harvesting.
+**Wall:** `archaeologist.py --list` returns "No conversations found" or empty results. The conversation sidebar is lazy-loaded and not populated until scrolled.
+**Solution:** Use `--scroll` flag or manually scroll the sidebar before listing. Conversations only appear in DOM after scroll interaction triggers React to render them.
+**Code:**
+```bash
+# Scroll first, then list
+python3 archaeologist.py --platform chatgpt --scroll
+python3 archaeologist.py --platform chatgpt --list
+```
+
 ## The Goal
 
 The translator directory should be a living, growing knowledge base. Every session adds discoveries. Every agent inherits all previous discoveries. No wall is hit twice.
